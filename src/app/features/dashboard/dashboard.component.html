@@ -1,0 +1,161 @@
+<div class="app-frame" id="inicio">
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="Monitor de Calidad del Aire, inicio">
+      <svg class="brand-icon" viewBox="0 0 40 36" fill="none" aria-hidden="true">
+        <path d="M7.2 21.8c0-3.3 2.7-6 6-6 .9-4.8 5-8.4 10-8.4 5.5 0 9.9 4.4 9.9 9.9v.2a5.8 5.8 0 0 1-.7 11.5H13.5a6.3 6.3 0 0 1-6.3-6.3Z" />
+        <path d="M3.5 26.5h9m-5.5 4h12m2-4h15" />
+      </svg>
+      <span>MONITOR DE CALIDAD DEL AIRE</span>
+    </a>
+
+    <nav class="main-nav" aria-label="Navegación principal">
+      <a class="active" href="#inicio">Inicio</a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a href="#historial">Historial</a>
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a href="#administracion">Administración</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search-panel" aria-labelledby="page-title">
+      <h1 id="page-title">Consulta la calidad del aire de una ciudad</h1>
+      <label for="city-select">Ciudad</label>
+      <div class="city-row">
+        <select id="city-select" aria-label="Selecciona una ciudad">
+          <option selected>Bogotá, Colombia</option>
+        </select>
+        <a
+          class="maps-link"
+          [href]="mapUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir Bogotá en Google Maps, en una pestaña nueva"
+          title="Abrir Bogotá en Google Maps"
+        >
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 18s6-4.7 6-10a6 6 0 1 0-12 0c0 5.3 6 10 6 10Z" />
+            <circle cx="10" cy="8" r="2" />
+          </svg>
+          <span>Ver en Maps</span>
+        </a>
+      </div>
+      <button class="consult-button" type="button" (click)="consult()">
+        {{ hasQueried() ? 'CONSULTAR DE NUEVO' : 'CONSULTAR' }}
+      </button>
+      <p class="demo-label">Vista de demostración · Bogotá, Colombia</p>
+    </section>
+
+    <section class="readings" aria-label="Mediciones de calidad del aire">
+      @for (reading of snapshot.pollutants; track reading.code) {
+        <article class="reading-card" [class]="'reading-card ' + reading.tone">
+          <div class="reading-icon" aria-hidden="true">
+            @if (reading.code === 'PM2.5') {
+              <svg viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="1.6" />
+                <circle cx="20" cy="10" r="1.4" />
+                <circle cx="27" cy="13" r="1.4" />
+                <circle cx="30" cy="20" r="1.4" />
+                <circle cx="27" cy="27" r="1.4" />
+                <circle cx="20" cy="30" r="1.4" />
+                <circle cx="13" cy="27" r="1.4" />
+                <circle cx="10" cy="20" r="1.4" />
+                <circle cx="13" cy="13" r="1.4" />
+              </svg>
+            } @else if (reading.code === 'NO₂') {
+              <svg viewBox="0 0 40 40" fill="none">
+                <path d="m13 27 14-14" />
+                <circle cx="12" cy="28" r="3.5" />
+                <circle cx="28" cy="12" r="3.5" />
+              </svg>
+            } @else {
+              <span class="ozone-icon">O<sub>3</sub></span>
+            }
+          </div>
+          <div class="reading-copy">
+            <h2>{{ reading.code }}</h2>
+            <p>
+              <strong>{{ hasQueried() ? reading.value : '--' }}</strong>
+              <span>{{ reading.unit }}</span>
+            </p>
+            @if (hasQueried()) {
+              <small>{{ reading.name }}</small>
+            }
+          </div>
+        </article>
+      }
+    </section>
+
+    <section class="summary-banner" aria-live="polite">
+      <span class="summary-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M8 4.5h8a2 2 0 0 1 2 2V20H6V6.5a2 2 0 0 1 2-2Z" />
+          <path d="M9 4.5V3h6v1.5M9 9h6m-6 3h6m-6 3h4" />
+        </svg>
+      </span>
+      <span>
+        @if (hasQueried()) {
+          {{ snapshot.category }} · AQI referencial: {{ snapshot.aqi }} · Datos ilustrativos, no
+          corresponden a mediciones reales.
+        } @else {
+          Resumen de calidad del aire / categoría AQI / referencia OMS
+        }
+      </span>
+    </section>
+
+    <section class="chart-panel" id="historial" aria-label="Gráfica de calidad del aire">
+      <div class="chart-area">
+        <div class="y-axis" aria-hidden="true">
+          <span>60</span><span>40</span><span>20</span><span>0</span>
+        </div>
+        <svg
+          class="chart"
+          viewBox="0 0 840 150"
+          role="img"
+          aria-label="Gráfica ilustrativa de concentraciones de partículas durante el día"
+          preserveAspectRatio="none"
+        >
+          <line class="gridline" x1="34" y1="19" x2="832" y2="19" />
+          <line class="gridline" x1="34" y1="54" x2="832" y2="54" />
+          <line class="gridline" x1="34" y1="89" x2="832" y2="89" />
+          <line class="gridline" x1="34" y1="124" x2="832" y2="124" />
+          <line class="axis" x1="34" y1="14" x2="34" y2="125" />
+          <line class="axis" x1="34" y1="125" x2="832" y2="125" />
+          @for (point of chartPoints; track point.label) {
+            <rect
+              class="chart-bar"
+              [attr.x]="point.x - 15"
+              [attr.y]="125 - point.value * 1.5"
+              width="30"
+              [attr.height]="point.value * 1.5"
+            />
+          }
+          <path class="chart-line" [attr.d]="chartLine" />
+          @for (point of chartPoints; track point.label) {
+            <circle class="chart-point" [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" />
+          }
+        </svg>
+      </div>
+      <div class="chart-labels" aria-hidden="true">
+        @for (point of snapshot.hourlyTrend; track point.label) {
+          <span>{{ point.label }}</span>
+        }
+      </div>
+      <p class="chart-caption">Área para gráfica generada con Matplotlib</p>
+    </section>
+
+    <p class="disclaimer" id="administracion">
+      Mockup visual: cifras y gráfica de ejemplo, sin conexión a una API ni a sensores.
+    </p>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <span>Última actualización</span>
+      <span class="footer-separator" aria-hidden="true"></span>
+      <span>Fuente de datos</span>
+      <span class="footer-separator" aria-hidden="true"></span>
+      <span>Aviso informativo</span>
+    </div>
+  </footer>
+</div>
