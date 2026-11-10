@@ -1,4 +1,50 @@
-:host {
-  display: block;
-  min-height: 100vh;
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #12324d;
+  color: #fff;
+}
+
+.marca {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+nav {
+  display: flex;
+  gap: 8px;
+}
+
+nav a {
+  color: #d7e6f5;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+nav a.activo,
+nav a:hover {
+  background: #1d4d73;
+  color: #fff;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+@media (max-width: 720px) {
+  .barra {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }

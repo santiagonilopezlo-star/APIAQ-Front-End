@@ -1,45 +1,29 @@
-# Monitor de Calidad del Aire
+# Monitor de calidad del aire
 
-Prototipo visual en Angular para presentar una consulta de calidad del aire en Bogotá. Esta entrega
-solo incluye frontend y datos de demostración: todavía no se conecta a OpenAQ ni a un backend.
-Los valores, la clasificación y la gráfica son ficticios; no representan condiciones actuales.
+Front Angular del prototipo académico. Se conecta al backend Python en `http://127.0.0.1:5000`. La clave de OpenAQ queda en el servidor.
+
+## Pantallas
+
+- Inicio: buscar estación, consultar PM2.5, NO2 y O3, AQI EPA y referencia OMS por separado.
+- Historial: tabla de consultas, filtros, gráfica PNG del backend y descarga CSV.
+- Administración: acceso local `admin` / `monitor` y limpieza del historial con confirmación.
 
 ## Requisitos
 
 - Node.js 20.19+ o 22.12+
-- npm
+- Backend Flask en marcha
 
-## Desarrollo local
+## Desarrollo
 
 ```bash
 npm install
 npm start
 ```
 
-Abre `http://localhost:4200/`. El enlace **Ver en Maps** abre la ubicación de Bogotá en Google
-Maps en una pestaña nueva.
+Abre `http://localhost:4200/`.
 
-## Estructura
-
-```text
-src/app/
-├── core/
-│   ├── models/air-quality.model.ts
-│   └── services/air-quality.service.ts
-├── data/mock-air-quality.ts
-└── features/dashboard/
-    ├── dashboard.component.ts
-    ├── dashboard.component.html
-    └── dashboard.component.scss
-```
-
-Los datos de muestra se mantienen separados del componente para facilitar una futura integración
-con una API. Cuando exista backend, `AirQualityService` podrá reemplazar la fuente local sin exponer
-credenciales de OpenAQ en el navegador.
-
-## Validación
+En el backend, desde la raíz del repo Python y con el entorno activo:
 
 ```bash
-npm run build
-npm test -- --watch=false
+python -m flask --app backend/app/main run
 ```

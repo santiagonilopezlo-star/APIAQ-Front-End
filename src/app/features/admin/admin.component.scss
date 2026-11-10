@@ -1,0 +1,58 @@
+.caja,
+section {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+form {
+  display: grid;
+  gap: 8px;
+  max-width: 360px;
+}
+
+input,
+button {
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid #c5d4e4;
+  padding: 8px 12px;
+}
+
+.error {
+  color: #7a271a;
+  font-weight: 700;
+}
+
+.tabla-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #e4ebf2;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgb(18 50 77 / 45%);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.dialogo {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  max-width: 420px;
+}

@@ -1,0 +1,73 @@
+.acciones,
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+  margin: 12px 0;
+}
+
+.boton,
+button {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #1f6f8b;
+  color: #fff;
+  text-decoration: none;
+  border: 0;
+}
+
+.boton.off {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.aviso.error {
+  color: #7a271a;
+}
+
+.vacio {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.tabla-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e4ebf2;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  background: #fff;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+img {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .filtros {
+    grid-template-columns: 1fr;
+  }
+}

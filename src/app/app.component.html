@@ -1,1 +1,11 @@
-<router-outlet />
+<header class="barra">
+  <a class="marca" routerLink="/">Monitor de calidad del aire</a>
+  <nav aria-label="Principal">
+    <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+    <a routerLink="/historial" routerLinkActive="activo">Historial</a>
+    <a routerLink="/admin" routerLinkActive="activo">Administración</a>
+  </nav>
+</header>
+<main>
+  <router-outlet />
+</main>

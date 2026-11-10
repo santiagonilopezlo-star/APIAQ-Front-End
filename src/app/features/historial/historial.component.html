@@ -1,0 +1,70 @@
+<h1>Historial de consultas</h1>
+<p>Los registros más recientes aparecen primero. La descarga entrega el CSV del servidor.</p>
+
+<div class="acciones">
+  <a
+    class="boton"
+    [href]="urlCsv"
+    [attr.aria-disabled]="consultas().length ? null : true"
+    [attr.tabindex]="consultas().length ? null : -1"
+    [class.off]="!consultas().length"
+  >
+    Descargar CSV
+  </a>
+  <a class="boton" routerLink="/">Nueva consulta</a>
+  <button type="button" (click)="cargar()">Reintentar</button>
+</div>
+
+@if (mensaje()) {
+  <p class="aviso" [class.error]="esError()" role="status">{{ mensaje() }}</p>
+}
+
+@if (!consultas().length && !cargando()) {
+  <p class="vacio">Aún no hay consultas guardadas.</p>
+} @else {
+  <div class="tabla-wrap">
+    <table>
+      <caption>Consultas guardadas</caption>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Ciudad</th>
+          <th>Resultado</th>
+          <th>Fuente</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (fila of consultas(); track fila.fecha_consulta + fila.ciudad) {
+          <tr>
+            <td>{{ fila.fecha_consulta }}</td>
+            <td>{{ fila.ciudad }}</td>
+            <td>{{ fila.resultado }}</td>
+            <td>{{ fila.fuente }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<form class="filtros" (ngSubmit)="cargarMediciones()">
+  <h2>Gráfica histórica</h2>
+  <label for="contaminante">Contaminante</label>
+  <select id="contaminante" name="contaminante" [ngModel]="contaminante()" (ngModelChange)="contaminante.set($event)">
+    <option value="pm25">PM2.5</option>
+    <option value="no2">NO₂</option>
+    <option value="o3">O₃</option>
+  </select>
+  <label for="desde">Desde (UTC)</label>
+  <input id="desde" name="desde" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+  <label for="hasta">Hasta (UTC)</label>
+  <input id="hasta" name="hasta" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+  <button type="submit">Aplicar rango</button>
+  <p>{{ resumen() }}</p>
+</form>
+
+@if (graficaUrl()) {
+  <img [src]="graficaUrl()" alt="Gráfica histórica con fecha en el eje horizontal y unidad en el vertical" />
+} @else {
+  <p class="vacio">Sin gráfica para ese rango. No se inventan mediciones.</p>
+}

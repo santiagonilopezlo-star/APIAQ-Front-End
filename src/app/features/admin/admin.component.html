@@ -1,0 +1,57 @@
+@if (!entro()) {
+  <section class="caja">
+    <h1>Acceso de administración</h1>
+    <p>Ruta aparte. El visitante no se registra. La clave de OpenAQ no se escribe aquí.</p>
+    <form (ngSubmit)="entrar()">
+      <label for="usuario">Usuario</label>
+      <input id="usuario" name="usuario" autocomplete="username" [ngModel]="usuario()" (ngModelChange)="usuario.set($event)" />
+      <label for="clave">Contraseña</label>
+      <input id="clave" name="clave" type="password" autocomplete="current-password" [ngModel]="clave()" (ngModelChange)="clave.set($event)" />
+      <button type="submit">Entrar</button>
+    </form>
+    @if (errorAcceso()) {
+      <p class="error" role="alert">{{ errorAcceso() }}</p>
+    }
+    <a routerLink="/">Volver a la consulta pública</a>
+  </section>
+} @else {
+  <section>
+    <h1>Panel de administración</h1>
+    <p>{{ mensaje() }}</p>
+    <button type="button" (click)="confirmar.set(true)">Limpiar historial</button>
+    <div class="tabla-wrap">
+      <table>
+        <caption>Historial del prototipo</caption>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Ciudad</th>
+            <th>Resultado</th>
+            <th>Fuente</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of consultas(); track fila.fecha_consulta + fila.ciudad) {
+            <tr>
+              <td>{{ fila.fecha_consulta }}</td>
+              <td>{{ fila.ciudad }}</td>
+              <td>{{ fila.resultado }}</td>
+              <td>{{ fila.fuente }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (confirmar()) {
+  <div class="modal" role="dialog" aria-labelledby="titulo-limpiar">
+    <div class="dialogo">
+      <h2 id="titulo-limpiar">¿Limpiar el historial?</h2>
+      <p>Esta acción borra las consultas guardadas en el servidor. No se puede deshacer.</p>
+      <button type="button" (click)="confirmar.set(false)">Cancelar</button>
+      <button type="button" (click)="limpiar()">Confirmar limpieza</button>
+    </div>
+  </div>
+}
