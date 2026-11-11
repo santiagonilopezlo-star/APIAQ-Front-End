@@ -44,6 +44,20 @@ export interface ReferenciaOms {
   valor_medido?: number | null;
 }
 
+export interface CalidadAire {
+  nivel: 'bien' | 'regular' | 'mal' | 'sin_dato';
+  titulo: string;
+  us_aqi: number | null;
+  categoria_epa?: string | null;
+  pm2_5?: number | null;
+  pm10?: number | null;
+  unidad?: string;
+  fecha?: string | null;
+  fuente?: string;
+  modelo?: string;
+  aviso?: string;
+}
+
 export interface Consulta {
   ciudad: string;
   fecha_consulta: string;
@@ -51,6 +65,7 @@ export interface Consulta {
   mediciones: Medicion[];
   aqi_epa: AqiEpa;
   referencia_oms: ReferenciaOms;
+  calidad_aire?: CalidadAire | null;
 }
 
 export interface ConsultaGuardada {

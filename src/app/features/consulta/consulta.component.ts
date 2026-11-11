@@ -24,17 +24,18 @@ export class ConsultaComponent {
   private readonly api = inject(MonitorService);
 
   protected readonly ciudades = [
-    'Bogota',
-    'Medellin',
-    'Cali',
-    'Barranquilla',
-    'Cartagena',
-    'Bucaramanga',
-    'Pereira',
-    'Cucuta',
-    'Santa Marta',
-    'Manizales',
+    { valor: 'Bogota', nombre: 'Bogotá' },
+    { valor: 'Medellin', nombre: 'Medellín' },
+    { valor: 'Cali', nombre: 'Cali' },
+    { valor: 'Barranquilla', nombre: 'Barranquilla' },
+    { valor: 'Cartagena', nombre: 'Cartagena' },
+    { valor: 'Bucaramanga', nombre: 'Bucaramanga' },
+    { valor: 'Pereira', nombre: 'Pereira' },
+    { valor: 'Cucuta', nombre: 'Cúcuta' },
+    { valor: 'Santa Marta', nombre: 'Santa Marta' },
+    { valor: 'Manizales', nombre: 'Manizales' },
   ];
+  protected readonly modo = signal<'casual' | 'detalle'>('casual');
   protected readonly contaminantes = CONTAMINANTES;
   protected readonly ciudad = signal('Bogota');
   protected readonly estaciones = signal<Estacion[]>([]);
@@ -76,14 +77,14 @@ export class ConsultaComponent {
   protected consultar(): void {
     this.cargando.set(true);
     this.esError.set(false);
-    this.mensaje.set('Consultando OpenAQ...');
+    this.mensaje.set('Revisando el aire...');
     this.graficaUrl.set('');
     this.sinGrafica.set(false);
     this.api.consultar(this.ciudad()).subscribe({
       next: (datos) => {
         this.resultado.set(datos);
         this.cargando.set(false);
-        this.mensaje.set('Consulta lista. El AQI EPA y la guía OMS van en bloques separados.');
+        this.mensaje.set('');
         this.pedirGrafica();
       },
       error: (error: HttpErrorResponse) => this.fallo(error, 'No se pudo completar la consulta.'),
@@ -91,15 +92,86 @@ export class ConsultaComponent {
   }
 
   protected reintentar(): void {
-    if (this.estaciones().length) {
+    if (this.modo() === 'casual' || this.estaciones().length) {
       this.consultar();
       return;
     }
     this.buscarEstaciones();
   }
 
+  protected nombreCiudad(): string {
+    return this.ciudades.find((item) => item.valor === this.ciudad())?.nombre || this.ciudad();
+  }
+
+  protected consejo(): string {
+    const ciudad = this.nombreCiudad();
+    if (!this.resultado()) {
+      return `Elige la ciudad donde estás. Te decimos si el aire está bien, regular o mal.`;
+    }
+    const nivel = this.nivelAire();
+    if (nivel === 'bien') {
+      return `En ${ciudad} el aire está bien. Puedes hacer actividad al aire libre.`;
+    }
+    if (nivel === 'regular') {
+      return `En ${ciudad} el aire está regular. Si eres sensible, evita esfuerzo largo afuera.`;
+    }
+    if (nivel === 'mal') {
+      return `En ${ciudad} el aire está mal. Limita el tiempo al aire libre.`;
+    }
+    return `No hay un índice claro para ${ciudad}. No se inventa el resultado.`;
+  }
+
   protected medicionDe(codigo: string): Medicion | undefined {
     return this.resultado()?.mediciones.find((item) => item.contaminante === codigo);
+  }
+
+  protected nivelAire(): 'bien' | 'regular' | 'mal' | 'sin_dato' | 'espera' {
+    if (!this.resultado()) {
+      return 'espera';
+    }
+    const nivel = this.resultado()?.calidad_aire?.nivel;
+    if (nivel === 'bien' || nivel === 'regular' || nivel === 'mal') {
+      return nivel;
+    }
+    const categoria = this.resultado()?.aqi_epa?.categoria;
+    if (categoria === 'Buena') {
+      return 'bien';
+    }
+    if (categoria === 'Moderada') {
+      return 'regular';
+    }
+    if (categoria) {
+      return 'mal';
+    }
+    return 'sin_dato';
+  }
+
+  protected tituloNivel(): string {
+    const calidad = this.resultado()?.calidad_aire;
+    if (calidad?.titulo && this.nivelAire() !== 'espera') {
+      return calidad.titulo;
+    }
+    const titulos = {
+      bien: 'Bien',
+      regular: 'Regular',
+      mal: 'Mal',
+      sin_dato: 'Sin clasificar',
+      espera: 'Sin revisar',
+    };
+    return titulos[this.nivelAire()];
+  }
+
+  protected fraseNivel(): string {
+    const datos = this.resultado();
+    if (!datos) {
+      return 'Consulta una ciudad para ver si el aire está bien, regular o mal.';
+    }
+    const calidad = datos.calidad_aire;
+    if (calidad && calidad.us_aqi !== null && calidad.us_aqi !== undefined && calidad.nivel !== 'sin_dato') {
+      const pm = calidad.pm2_5 ?? 'sin dato';
+      return `El aire de ${datos.ciudad} está ${calidad.titulo.toLowerCase()}. US AQI ${calidad.us_aqi}. PM2.5 ${pm} ${calidad.unidad || 'µg/m³'}. Fuente: ${calidad.fuente || 'Open-Meteo'}. ${calidad.aviso || ''}`;
+    }
+    return `No se puede decir si el aire de ${datos.ciudad} está bien, regular o mal. ${calidad?.aviso || datos.aqi_epa?.motivo || 'Open-Meteo no entregó índice.'}`;
   }
 
   protected textoAqi(): string {

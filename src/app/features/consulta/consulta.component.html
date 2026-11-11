@@ -1,102 +1,125 @@
 <section class="intro">
-  <h1>Consulta la calidad del aire de una ciudad</h1>
-  <p>
-    Elige una ciudad de Colombia. OpenAQ entrega la medición en unidades físicas. El servidor
-    calcula el AQI de la EPA cuando la unidad y el periodo lo permiten, y compara aparte con las
-    guías de la OMS.
-  </p>
+  <h1>¿Cómo está el aire en tu ciudad?</h1>
+  <div class="modos" role="group" aria-label="Tipo de vista">
+    <button type="button" [attr.aria-pressed]="modo() === 'casual'" (click)="modo.set('casual')">
+      Modo simple
+    </button>
+    <button type="button" [attr.aria-pressed]="modo() === 'detalle'" (click)="modo.set('detalle')">
+      Modo detalle
+    </button>
+  </div>
 </section>
 
 <form class="panel" (ngSubmit)="consultar()">
-  <label for="ciudad">Ciudad</label>
+  <label for="ciudad">¿En qué ciudad estás?</label>
   <div class="fila">
     <select id="ciudad" name="ciudad" [ngModel]="ciudad()" (ngModelChange)="ciudad.set($event)">
-      @for (nombre of ciudades; track nombre) {
-        <option [value]="nombre">{{ nombre }}, Colombia</option>
+      @for (item of ciudades; track item.valor) {
+        <option [value]="item.valor">{{ item.nombre }}</option>
       }
     </select>
-    <a class="enlace" [href]="mapaUrl()" target="_blank" rel="noopener">Ver en mapa</a>
+    @if (modo() === 'detalle') {
+      <a class="enlace" [href]="mapaUrl()" target="_blank" rel="noopener">Ver en mapa</a>
+    }
   </div>
 
-  <label for="estacion">Estación</label>
-  <select
-    id="estacion"
-    name="estacion"
-    [ngModel]="estacionId()"
-    (ngModelChange)="estacionId.set($event)"
-  >
-    <option value="">Selecciona una estación</option>
-    @for (estacion of estaciones(); track estacion.id) {
-      <option [value]="estacion.id">{{ estacion.nombre }} ({{ estacion.id }})</option>
-    }
-  </select>
+  @if (modo() === 'detalle') {
+    <label for="estacion">Estación</label>
+    <select
+      id="estacion"
+      name="estacion"
+      [ngModel]="estacionId()"
+      (ngModelChange)="estacionId.set($event)"
+    >
+      <option value="">Selecciona una estación</option>
+      @for (estacion of estaciones(); track estacion.id) {
+        <option [value]="estacion.id">{{ estacion.nombre }} ({{ estacion.id }})</option>
+      }
+    </select>
+  }
 
   <div class="acciones">
-    <button type="button" (click)="buscarEstaciones()" [disabled]="cargando()">Buscar estaciones</button>
-    <button class="principal" type="submit" [disabled]="cargando()">Consultar</button>
-    <button type="button" (click)="reintentar()" [disabled]="cargando()">Reintentar</button>
+    <button class="principal" type="submit" [disabled]="cargando()">Ver el aire</button>
+    @if (modo() === 'detalle') {
+      <button type="button" (click)="buscarEstaciones()" [disabled]="cargando()">Buscar estaciones</button>
+    }
+    @if (esError() || modo() === 'detalle') {
+      <button type="button" (click)="reintentar()" [disabled]="cargando()">Reintentar</button>
+    }
   </div>
-  <p class="ayuda">Sin registro. La clave de OpenAQ permanece en el servidor.</p>
+  @if (modo() === 'detalle') {
+    <p class="ayuda">Sin registro. La clave de OpenAQ permanece en el servidor.</p>
+  }
 </form>
 
 @if (mensaje()) {
   <p class="aviso" [class.error]="esError()" role="status">{{ mensaje() }}</p>
 }
-@if (cargando()) {
-  <p class="aviso" role="status">Cargando...</p>
-}
 
-<section class="tarjetas" aria-label="Mediciones">
-  @for (item of contaminantes; track item.codigo) {
-    <article class="tarjeta">
-      <h2>{{ item.nombre }}</h2>
-      <p class="valor">{{ medicionDe(item.codigo)?.valor ?? 'Sin dato' }}</p>
-      <p class="unidad">{{ medicionDe(item.codigo)?.unidad || 'µg/m³' }}</p>
-      <p>{{ item.titulo }}</p>
-      <p class="meta">
-        @if (medicionDe(item.codigo); as medicion) {
-          Fecha {{ medicion.fecha_medicion }} · estación {{ medicion.estacion_id }} · periodo
-          {{ medicion.periodo }} · fuente {{ resultado()?.fuente || 'OpenAQ' }}
-        } @else {
-          Esperando consulta o sin dato para este contaminante. No clasificable solo con color.
-        }
-      </p>
-    </article>
+<section class="estado" [attr.data-nivel]="nivelAire()" aria-live="polite">
+  <p class="donde">{{ resultado() ? nombreCiudad() : 'Tu ciudad' }}</p>
+  <p class="nivel">{{ tituloNivel() }}</p>
+  <p class="consejo">{{ consejo() }}</p>
+  @if (modo() === 'casual' && resultado()?.calidad_aire?.us_aqi != null) {
+    <p class="indice-ciudad">Índice {{ resultado()?.calidad_aire?.us_aqi }}</p>
   }
 </section>
 
-@if (resultado()) {
-  <section class="bloques">
-    <article class="bloque aqi">
-      <h2>AQI EPA</h2>
-      <p class="indice">{{ resultado()?.aqi_epa?.indice ?? '—' }}</p>
-      <p>{{ resultado()?.aqi_epa?.categoria || 'Sin categoría' }}</p>
-      <p>{{ textoAqi() }}</p>
-      <p class="leyenda">
-        Categorías: Buena, Moderada, Insalubre para grupos sensibles, Insalubre, Muy insalubre,
-        Peligrosa. El nombre acompaña siempre al color.
-      </p>
-    </article>
-    <article class="bloque oms">
-      <h2>Referencia OMS</h2>
-      <p class="etiqueta">No es un AQI</p>
-      <p>{{ textoOms() }}</p>
-    </article>
+@if (modo() === 'detalle') {
+  <section class="tarjetas" aria-label="Mediciones">
+    @for (item of contaminantes; track item.codigo) {
+      <article class="tarjeta">
+        <h2>{{ item.nombre }}</h2>
+        <p class="valor">{{ medicionDe(item.codigo)?.valor ?? 'Sin dato' }}</p>
+        <p class="unidad">{{ medicionDe(item.codigo)?.unidad || 'µg/m³' }}</p>
+        <p>{{ item.titulo }}</p>
+        <p class="meta">
+          @if (medicionDe(item.codigo); as medicion) {
+            Fecha {{ medicion.fecha_medicion }} · estación {{ medicion.estacion_id }} · periodo
+            {{ medicion.periodo }} · fuente {{ resultado()?.fuente || 'OpenAQ' }}
+          } @else {
+            Sin dato de estación para este contaminante. El color no basta para clasificarlo.
+          }
+        </p>
+      </article>
+    }
   </section>
+
+  @if (resultado()) {
+    <section class="bloques">
+      <article class="bloque aqi">
+        <h2>AQI EPA</h2>
+        <p class="indice">{{ resultado()?.aqi_epa?.indice ?? '—' }}</p>
+        <p>{{ resultado()?.aqi_epa?.categoria || 'Sin categoría' }}</p>
+        <p>{{ textoAqi() }}</p>
+        <p class="leyenda">
+          Categorías: Buena, Moderada, Dañina para grupos sensibles, Dañina, Muy dañina, Peligrosa.
+          El nombre acompaña siempre al color.
+        </p>
+      </article>
+      <article class="bloque oms">
+        <h2>Referencia OMS</h2>
+        <p class="etiqueta">No es un AQI</p>
+        <p>{{ textoOms() }}</p>
+      </article>
+    </section>
+    <p class="detalle-indice">{{ fraseNivel() }}</p>
+  }
+
+  <section class="grafica" aria-label="Gráfica histórica">
+    <h2>Gráfica</h2>
+    <p>{{ resumenGrafica() || 'La gráfica aparece cuando hay al menos una medición válida.' }}</p>
+    @if (graficaUrl()) {
+      <img [src]="graficaUrl()" alt="Historial de PM2.5 con ejes de fecha y unidad" />
+    } @else if (sinGrafica()) {
+      <p class="vacio">Sin gráfica. No hay valores válidos para graficar.</p>
+    }
+  </section>
+
+  <footer class="pie">
+    <p>Última actualización: {{ resultado()?.fecha_consulta || resultado()?.calidad_aire?.fecha || '—' }}</p>
+    <p>Fuente del estado: Open-Meteo. Mediciones de estación: OpenAQ.</p>
+  </footer>
 }
 
-<section class="grafica" aria-label="Gráfica histórica">
-  <h2>Gráfica</h2>
-  <p>{{ resumenGrafica() || 'Matplotlib la genera cuando hay al menos una medición válida.' }}</p>
-  @if (graficaUrl()) {
-    <img [src]="graficaUrl()" alt="Historial de PM2.5 con ejes de fecha y unidad" />
-  } @else if (sinGrafica()) {
-    <p class="vacio">Sin gráfica. No hay valores válidos para graficar.</p>
-  }
-</section>
-
-<footer class="pie">
-  <p>Última actualización: {{ resultado()?.fecha_consulta || '—' }}</p>
-  <p>Fuente de datos: OpenAQ API v3</p>
-  <p class="disclaimer">Información orientativa. No sustituye alertas oficiales ni recomendaciones médicas.</p>
-</footer>
+<p class="disclaimer">Información orientativa. No sustituye alertas oficiales.</p>
